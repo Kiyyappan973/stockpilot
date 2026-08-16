@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { supabase } from './supabase'
 import Toast from './components/Toast'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
@@ -19,6 +20,80 @@ function ProtectedRoute({ user, children }) {
     return <Navigate to="/login" />
   }
   return children
+}
+// Wraps page switching with a fade + slide transition
+function AnimatedRoutes(props) {
+  const location = useLocation()
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Dashboard products={props.products} />
+            </motion.div>
+          }
+        />
+        <Route
+          path="products"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Products
+                products={props.products}
+                productsLoading={props.productsLoading}
+                addProduct={props.addProduct}
+                updateProduct={props.updateProduct}
+                deleteProduct={props.deleteProduct}
+                adjustStock={props.adjustStock}
+              />
+            </motion.div>
+          }
+        />
+        <Route
+          path="history"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <History history={props.history} />
+            </motion.div>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Settings
+                clearAllData={props.clearAllData}
+                darkMode={props.darkMode}
+                setDarkMode={props.setDarkMode}
+              />
+            </motion.div>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  )
 }
 
 function App() {
@@ -213,33 +288,18 @@ function App() {
                       </span>
                     </div>
                   )}
-                  <Routes>
-                    <Route path="/" element={<Dashboard products={products} />} />
-                    <Route
-                      path="products"
-                      element={
-                        <Products
-                          products={products}
-                          productsLoading={productsLoading}
-                          addProduct={addProduct}
-                          updateProduct={updateProduct}
-                          deleteProduct={deleteProduct}
-                          adjustStock={adjustStock}
-                        />
-                      }
-                    />
-                    <Route path="/history" element={<History history={history} />} />
-                    <Route
-                      path="/settings"
-                      element={
-                        <Settings
-                          clearAllData={clearAllData}
-                          darkMode={darkMode}
-                          setDarkMode={setDarkMode}
-                        />
-                      }
-                    />
-                  </Routes>
+                  <AnimatedRoutes
+                    products={products}
+                    productsLoading={productsLoading}
+                    addProduct={addProduct}
+                    updateProduct={updateProduct}
+                    deleteProduct={deleteProduct}
+                    adjustStock={adjustStock}
+                    history={history}
+                    clearAllData={clearAllData}
+                    darkMode={darkMode}
+                    setDarkMode={setDarkMode}
+                  />
                 </div>
               </div>
             </ProtectedRoute>

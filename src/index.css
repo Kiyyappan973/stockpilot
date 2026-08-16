@@ -1,4 +1,7 @@
 @import "tailwindcss";
+body {
+  font-family: 'Inter', sans-serif;
+}
 @keyframes slide-up {
   from {
     transform: translateY(20px);

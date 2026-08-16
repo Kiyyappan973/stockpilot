@@ -37,7 +37,7 @@ function Sidebar({ user }) {
       <div
         className={`
           w-64 bg-white shadow-sm p-4 flex-col gap-2 h-screen
-          md:flex md:static
+          md:flex md:sticky md:top-0
           ${mobileOpen ? 'flex fixed top-0 left-0 z-50' : 'hidden'}
         `}
       >

@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Pencil, Trash2, Check, X, Plus, ArrowUpCircle, ArrowDownCircle, Download } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function Products({ products, productsLoading, addProduct, updateProduct, deleteProduct, adjustStock }) {
   const [adding, setAdding] = useState(false)
+  const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [category, setCategory] = useState('General')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -32,6 +35,16 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
       setIcon('📦')
     }
   }
+  // If the URL has ?edit=<id> (from clicking a 3D warehouse box), auto-open that product's edit mode
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId && products.length > 0) {
+      const product = products.find((p) => p.id === Number(editId))
+      if (product) {
+        startEdit(product)
+      }
+    }
+  }, [searchParams, products])
 
   function startEdit(product) {
     setEditingId(product.id)
@@ -117,14 +130,16 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={handleAddProduct}
             disabled={adding}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium px-5 py-2 rounded-lg transition flex items-center gap-1"
           >
             <Plus size={18} />
             {adding ? 'Adding...' : 'Add Product'}
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -167,11 +182,17 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
           <p className="text-gray-400">No products found.</p>
         ) : (
           <div className="space-y-2">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="flex flex-col sm:flex-row sm:justify-between sm:items-center border border-gray-100 rounded-lg px-4 py-3 gap-3"
-              >
+            <AnimatePresence>
+              {filteredProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col sm:flex-row sm:justify-between sm:items-center border border-gray-100 rounded-lg px-4 py-3 gap-3"
+                >
                 {editingId === product.id ? (
                   <>
                     <input
@@ -248,8 +269,9 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
                     </div>
                   </>
                 )}
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>

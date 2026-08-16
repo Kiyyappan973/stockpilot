@@ -1,8 +1,16 @@
 import RotatingCube from '../RotatingCube'
+import WarehouseScene from '../WarehouseScene'
+import { useNavigate } from 'react-router-dom'
 import { Package, TrendingUp, AlertTriangle } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 function Dashboard({ products }) {
+  const navigate = useNavigate()
+
+  function handleBoxClick(productId) {
+    navigate(`/app/products?edit=${productId}`)
+  }
   // Colors for each pie slice (cycles through if more categories exist)
   const COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1']
 
@@ -34,7 +42,12 @@ function Dashboard({ products }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0 }}
+          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+        >
           <div className="bg-blue-100 p-3 rounded-lg">
             <Package className="text-blue-600" size={22} />
           </div>
@@ -42,8 +55,14 @@ function Dashboard({ products }) {
             <p className="text-gray-400 text-sm">Total Products</p>
             <p className="text-2xl font-bold text-gray-800">{totalProducts}</p>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+        >
           <div className="bg-green-100 p-3 rounded-lg">
             <TrendingUp className="text-green-600" size={22} />
           </div>
@@ -51,8 +70,14 @@ function Dashboard({ products }) {
             <p className="text-gray-400 text-sm">Total Stock</p>
             <p className="text-2xl font-bold text-gray-800">{totalQuantity}</p>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+        >
           <div className={`p-3 rounded-lg ${lowStockCount > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
             <AlertTriangle className={lowStockCount > 0 ? 'text-red-600' : 'text-gray-400'} size={22} />
           </div>
@@ -62,7 +87,7 @@ function Dashboard({ products }) {
               {lowStockCount}
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Category Breakdown Chart */}
@@ -91,6 +116,20 @@ function Dashboard({ products }) {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* 3D Warehouse View */}
+      <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">3D Warehouse View</h2>
+        <p className="text-gray-400 text-sm mb-4">Drag to rotate, scroll to zoom, hover a box to see details</p>
+
+        {products.length === 0 ? (
+          <p className="text-gray-400">Add some products to see your warehouse.</p>
+        ) : (
+          <div style={{ height: '400px' }}>
+            <WarehouseScene products={products} onBoxClick={handleBoxClick} />
+          </div>
         )}
       </div>
     </div>
