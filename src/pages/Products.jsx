@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Pencil, Trash2, Check, X, Plus, ArrowUpCircle, ArrowDownCircle, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function Products({ products, productsLoading, addProduct, updateProduct, deleteProduct, adjustStock }) {
+function Products({ products, productsLoading, addProduct, updateProduct, deleteProduct, adjustStock, membership }) {
   const [adding, setAdding] = useState(false)
   const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
@@ -260,12 +260,14 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
                       >
                         <Pencil size={16} />
                       </button>
-                      <button
-                        onClick={() => deleteProduct(product.id)}
-                        className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {membership?.role === 'Manager' && (
+                        <button
+                          onClick={() => deleteProduct(product.id)}
+                          className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </>
                 )}

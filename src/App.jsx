@@ -13,6 +13,7 @@ import History from './pages/History'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Landing from './pages/Landing'
+import Team from './pages/Team'
 import './App.css'
 
 function ProtectedRoute({ user, children }) {
@@ -57,6 +58,7 @@ function AnimatedRoutes(props) {
                 updateProduct={props.updateProduct}
                 deleteProduct={props.deleteProduct}
                 adjustStock={props.adjustStock}
+                membership={props.membership}
               />
             </motion.div>
           }
@@ -74,21 +76,42 @@ function AnimatedRoutes(props) {
             </motion.div>
           }
         />
+                <Route
+          path="team"
+          element={
+            props.membership?.role === 'Manager' ? (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Team membership={props.membership} />
+              </motion.div>
+            ) : (
+              <div className="text-gray-500">You don't have permission to view this page.</div>
+            )
+          }
+        />
         <Route
           path="settings"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Settings
-                clearAllData={props.clearAllData}
-                darkMode={props.darkMode}
-                setDarkMode={props.setDarkMode}
-              />
-            </motion.div>
+            props.membership?.role === 'Manager' ? (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Settings
+                  clearAllData={props.clearAllData}
+                  darkMode={props.darkMode}
+                  setDarkMode={props.setDarkMode}
+                />
+              </motion.div>
+            ) : (
+              <div className="text-gray-500">You don't have permission to view this page.</div>
+            )
           }
         />
       </Routes>
@@ -117,8 +140,49 @@ function App() {
     localStorage.setItem('stockpilot-darkmode', JSON.stringify(darkMode))
   }, [darkMode])
 
+  const [membership, setMembership] = useState(null) // { warehouse_id, role, warehouse_name }
+  const [membershipLoading, setMembershipLoading] = useState(true)
   const [products, setProducts] = useState([])
   const [productsLoading, setProductsLoading] = useState(true)
+
+  // Load this user's warehouse membership (which warehouse, what role)
+  useEffect(() => {
+    async function fetchMembership() {
+      if (!user) {
+        setMembership(null)
+        setMembershipLoading(false)
+        return
+      }
+      setMembershipLoading(true)
+
+      const { data: memberRow, error: memberError } = await supabase
+        .from('members')
+        .select('*')
+        .eq('user_id', user.uid)
+        .single()
+
+      if (memberError || !memberRow) {
+        setMembership(null)
+        setMembershipLoading(false)
+        return
+      }
+
+      const { data: warehouseRow } = await supabase
+        .from('warehouses')
+        .select('*')
+        .eq('id', memberRow.warehouse_id)
+        .single()
+
+      setMembership({
+        warehouse_id: memberRow.warehouse_id,
+        role: memberRow.role,
+        warehouse_name: warehouseRow ? warehouseRow.name : 'Warehouse',
+        invite_code: warehouseRow ? warehouseRow.invite_code : ''
+      })
+      setMembershipLoading(false)
+    }
+    fetchMembership()
+  }, [user])
   const [toast, setToast] = useState({ message: '', type: 'success' })
 
   // Shows a toast message for 3 seconds, then auto-clears it
@@ -142,9 +206,10 @@ function App() {
   }, [history])
 
   // Load THIS user's products from Supabase whenever they log in
-  useEffect(() => {
+  
+useEffect(() => {
     async function fetchProducts() {
-      if (!user) {
+      if (!membership) {
         setProducts([])
         setProductsLoading(false)
         return
@@ -153,7 +218,7 @@ function App() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', user.uid)
+        .eq('warehouse_id', membership.warehouse_id)
         .order('id', { ascending: true })
 
       if (error) {
@@ -164,12 +229,11 @@ function App() {
       setProductsLoading(false)
     }
     fetchProducts()
-  }, [user])
-
+  }, [membership])
   async function addProduct(newProduct) {
     const { data, error } = await supabase
       .from('products')
-      .insert([{ ...newProduct, user_id: user.uid }])
+      .insert([{ ...newProduct, warehouse_id: membership.warehouse_id, user_id: user.uid }])
       .select()
 
     if (error) {
@@ -250,7 +314,7 @@ function App() {
     const { error } = await supabase
       .from('products')
       .delete()
-      .eq('user_id', user.uid)
+      .eq('warehouse_id', membership.warehouse_id)
 
     if (error) {
       alert('Error clearing data: ' + error.message)
@@ -276,7 +340,7 @@ function App() {
           element={
             <ProtectedRoute user={user}>
               <div className={`flex flex-col md:flex-row ${darkMode ? 'dark' : ''}`}>
-                <Sidebar user={user} />
+                <Sidebar user={user} membership={membership} />
                 <div className={`flex-1 min-h-screen p-4 md:p-8 transition-colors ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
                   <Toast message={toast.message} type={toast.type} />
                   {lowStockProducts.length > 0 && (
@@ -299,6 +363,7 @@ function App() {
                     clearAllData={clearAllData}
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
+                    membership={membership}
                   />
                 </div>
               </div>
