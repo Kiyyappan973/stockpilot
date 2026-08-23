@@ -1,154 +1,201 @@
 import { Link } from 'react-router-dom'
-import { Package, BarChart3, Boxes, ShieldCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Package, Boxes, BarChart3, ShieldCheck, Users, ArrowRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
+import LandingBackground from '../LandingBackground'
+
+const slides = [
+  {
+    tag: '📦 Smart Inventory',
+    title: 'Manage stock like never before',
+    desc: 'Track products, quantities, and categories in one clean, real-time dashboard built for modern warehouses.',
+    icon: Boxes,
+    color: 'from-blue-500 to-cyan-400'
+  },
+  {
+    tag: '📊 Insights',
+    title: 'See your data come alive',
+    desc: 'Visual dashboards, category breakdowns, and trend charts help you make smarter restocking decisions.',
+    icon: BarChart3,
+    color: 'from-purple-500 to-pink-400'
+  },
+  {
+    tag: '👥 Built for teams',
+    title: 'Invite your whole team',
+    desc: 'Share an invite code, assign roles, and watch stock updates sync live across every device instantly.',
+    icon: Users,
+    color: 'from-green-400 to-emerald-500'
+  },
+  {
+    tag: '🔒 Secure',
+    title: 'Your data, protected',
+    desc: 'Real authentication and role-based permissions keep your inventory safe and private to your team.',
+    icon: ShieldCheck,
+    color: 'from-orange-400 to-red-400'
+  }
+]
+
 
 function Landing() {
+  const [step, setStep] = useState(0)
+  const [direction, setDirection] = useState(1)
+  const slide = slides[step]
+  const isLastSlide = step === slides.length - 1
+
+  function handleScreenClick() {
+    if (isLastSlide) return
+    setDirection(1)
+    setStep((s) => s + 1)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden relative">
-      {/* Decorative floating blobs in the background */}
-      <motion.div
-        animate={{ y: [0, 20, 0], x: [0, 15, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-10 left-10 w-72 h-72 bg-blue-200 rounded-full blur-3xl opacity-40"
-      />
-      <motion.div
-        animate={{ y: [0, -25, 0], x: [0, -15, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-40 right-10 w-96 h-96 bg-purple-200 rounded-full blur-3xl opacity-40"
-      />
-      <motion.div
-        animate={{ y: [0, 15, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute bottom-10 left-1/3 w-80 h-80 bg-green-200 rounded-full blur-3xl opacity-30"
+    <div
+      onClick={handleScreenClick}
+      className="min-h-screen bg-black text-white overflow-hidden relative flex flex-col cursor-pointer select-none"
+    >
+      {/* Grid background */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #ffffff11 1px, transparent 1px), linear-gradient(to bottom, #ffffff11 1px, transparent 1px)',
+          backgroundSize: '48px 48px'
+        }}
       />
 
-      {/* Top Nav */}
-      <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative flex items-center justify-between px-6 py-4 bg-white/70 backdrop-blur-sm shadow-sm"
+      {/* Real 3D floating box field */}
+      <div className="absolute inset-0 pointer-events-none">
+        <LandingBackground />
+      </div>
+
+      {/* Glow overlay matching current slide color, sits on top of the 3D scene */}
+      <motion.div
+        animate={{ opacity: [0.1, 0.2, 0.1] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        className={`absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-br ${slide.color} rounded-full blur-[140px] opacity-10 pointer-events-none`}
+      />
+
+      {/* Nav — stopPropagation so clicking links doesn't advance the slide */}
+      <nav
+        onClick={(e) => e.stopPropagation()}
+        className="relative z-20 flex items-center justify-between px-6 py-5 cursor-default"
       >
         <div className="flex items-center gap-2">
-          <Package className="text-blue-600" size={28} />
-          <span className="text-xl font-bold text-gray-800">StockPilot</span>
+          <Package className="text-white" size={26} />
+          <span className="text-lg font-bold">StockPilot</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/login" className="text-gray-600 hover:text-gray-900 font-medium">
+        <div className="flex items-center gap-4">
+          <Link to="/login" className="text-gray-400 hover:text-white text-sm font-medium transition">
             Log In
           </Link>
           <Link
             to="/signup"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
+            className="bg-white text-black text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-200 transition"
           >
             Get Started
           </Link>
         </div>
-      </motion.nav>
+      </nav>
 
-      {/* Hero Section */}
-      <div className="relative max-w-4xl mx-auto text-center px-6 py-24">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="inline-block bg-blue-100 text-blue-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6"
-        >
-          📦 Now with 3D warehouse visualization
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl md:text-6xl font-extrabold text-gray-800 mb-6 leading-tight"
-        >
-          Smart Inventory
-          <br />
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Management, Simplified
-          </span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="text-lg text-gray-500 mb-8 max-w-2xl mx-auto"
-        >
-          Track stock, manage products, and stay ahead of low inventory — all in one clean,
-          real-time dashboard built for modern warehouses.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <Link to="/signup">
-            <motion.span
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg text-lg transition shadow-lg shadow-blue-200"
+      {/* Main vertical slide area */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -80 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-xl"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${slide.color} flex items-center justify-center mx-auto mb-6 shadow-lg`}
             >
-              Start Free Today
-            </motion.span>
-          </Link>
-        </motion.div>
+              <slide.icon size={30} className="text-white" />
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="text-sm text-gray-400 mb-3 font-medium tracking-wide"
+            >
+              {slide.tag}
+            </motion.p>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight"
+            >
+              {slide.title}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="text-gray-400 text-lg"
+            >
+              {slide.desc}
+            </motion.p>
+
+            {isLastSlide && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-8"
+              >
+                <Link to="/signup">
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 bg-white text-black font-medium px-6 py-3 rounded-full"
+                  >
+                    Get Started <ArrowRight size={16} />
+                  </motion.span>
+                </Link>
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Feature Cards */}
-      <div className="relative max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0 }}
-          whileHover={{ y: -6 }}
-          className="bg-white rounded-xl shadow-sm hover:shadow-xl p-6 text-center transition-shadow"
-        >
-          <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Boxes className="text-blue-600" size={24} />
-          </div>
-          <h3 className="font-semibold text-gray-800 mb-2">Real-Time Tracking</h3>
-          <p className="text-gray-500 text-sm">
-            Add, edit, and monitor stock levels instantly, with live updates across your team.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          whileHover={{ y: -6 }}
-          className="bg-white rounded-xl shadow-sm hover:shadow-xl p-6 text-center transition-shadow"
-        >
-          <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <BarChart3 className="text-green-600" size={24} />
-          </div>
-          <h3 className="font-semibold text-gray-800 mb-2">Insightful Dashboards</h3>
-          <p className="text-gray-500 text-sm">
-            Visualize stock by category, spot trends, and make smarter restocking decisions.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          whileHover={{ y: -6 }}
-          className="bg-white rounded-xl shadow-sm hover:shadow-xl p-6 text-center transition-shadow"
-        >
-          <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="text-purple-600" size={24} />
-          </div>
-          <h3 className="font-semibold text-gray-800 mb-2">Secure & Private</h3>
-          <p className="text-gray-500 text-sm">
-            Your data is protected with secure authentication — only you can access your inventory.
-          </p>
-        </motion.div>
+      {/* Dot progress + hint text */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 flex flex-col items-center gap-3 pb-10 cursor-default"
+      >
+        <div className="flex items-center gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setDirection(i > step ? 1 : -1)
+                setStep(i)
+              }}
+              className={`h-1.5 rounded-full transition-all ${
+                i === step ? 'w-8 bg-white' : 'w-1.5 bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+        {!isLastSlide && (
+          <motion.p
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-gray-500 text-xs tracking-wide"
+          >
+            Click anywhere to continue
+          </motion.p>
+        )}
       </div>
     </div>
   )

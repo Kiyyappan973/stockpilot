@@ -14,6 +14,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Landing from './pages/Landing'
 import Team from './pages/Team'
+import ProductDetail from './pages/ProductDetail'
 import './App.css'
 
 function ProtectedRoute({ user, children }) {
@@ -63,6 +64,19 @@ function AnimatedRoutes(props) {
             </motion.div>
           }
         />
+                <Route
+          path="products/:id"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ProductDetail products={props.products} membership={props.membership} />
+            </motion.div>
+          }
+        />
         <Route
           path="history"
           element={
@@ -72,7 +86,7 @@ function AnimatedRoutes(props) {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <History history={props.history} />
+              <History membership={props.membership} />
             </motion.div>
           }
         />
@@ -86,7 +100,7 @@ function AnimatedRoutes(props) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <Team membership={props.membership} />
+                               <Team membership={props.membership} onlineUsers={props.onlineUsers} />
               </motion.div>
             ) : (
               <div className="text-gray-500">You don't have permission to view this page.</div>
@@ -229,6 +243,41 @@ useEffect(() => {
       setProductsLoading(false)
     }
     fetchProducts()
+
+    if (!membership) return
+
+    const channel = supabase
+      .channel('products-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: `warehouse_id=eq.${membership.warehouse_id}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setProducts((current) => {
+              if (current.some((p) => p.id === payload.new.id)) return current
+              return [...current, payload.new]
+            })
+          }
+          if (payload.eventType === 'UPDATE') {
+            setProducts((current) =>
+              current.map((p) => (p.id === payload.new.id ? payload.new : p))
+            )
+          }
+          if (payload.eventType === 'DELETE') {
+            setProducts((current) => current.filter((p) => p.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [membership])
   async function addProduct(newProduct) {
     const { data, error } = await supabase
@@ -295,10 +344,20 @@ useEffect(() => {
     const newQuantity = product.quantity + amount
     await updateProduct(productId, { quantity: newQuantity })
 
-    // If this movement caused stock to CROSS below 5, play an alert sound
     if (product.quantity >= 5 && newQuantity < 5) {
       playAlertSound()
     }
+
+    // Save this movement to Supabase (shared history, works with charts)
+    await supabase.from('stock_history').insert([{
+      warehouse_id: membership.warehouse_id,
+      product_id: productId,
+      product_name: product.name,
+      type: type,
+      amount: Math.abs(amount),
+      quantity_after: newQuantity,
+      user_email: user.email
+    }])
 
     const logEntry = {
       id: Date.now(),
@@ -322,6 +381,33 @@ useEffect(() => {
     }
     setProducts([])
   }
+    const [onlineUsers, setOnlineUsers] = useState([])
+
+  // Track presence — who's currently online in this warehouse
+  useEffect(() => {
+    if (!membership || !user) return
+
+    const channel = supabase.channel(`presence-warehouse-${membership.warehouse_id}`, {
+      config: { presence: { key: user.uid } }
+    })
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState()
+        // Flatten the presence state into a simple list of unique users
+        const users = Object.values(state).map((entries) => entries[0])
+        setOnlineUsers(users)
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ email: user.email, online_at: new Date().toISOString() })
+        }
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [membership, user])
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>
@@ -339,9 +425,9 @@ useEffect(() => {
           path="/app/*"
           element={
             <ProtectedRoute user={user}>
-              <div className={`flex flex-col md:flex-row ${darkMode ? 'dark' : ''}`}>
-                <Sidebar user={user} membership={membership} />
-                <div className={`flex-1 min-h-screen p-4 md:p-8 transition-colors ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+              <div className={`flex flex-col md:flex-row w-full overflow-x-hidden ${darkMode ? 'dark' : ''}`}>
+                <Sidebar user={user} membership={membership} onlineUsers={onlineUsers} />
+                <div className="flex-1 min-h-screen w-full min-w-0 p-4 pb-24 md:p-8 md:pb-8 transition-colors overflow-x-hidden bg-slate-50 dark:bg-gray-950">
                   <Toast message={toast.message} type={toast.type} />
                   {lowStockProducts.length > 0 && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
@@ -364,6 +450,7 @@ useEffect(() => {
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
                     membership={membership}
+                    onlineUsers={onlineUsers}
                   />
                 </div>
               </div>

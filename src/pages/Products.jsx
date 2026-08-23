@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Pencil, Trash2, Check, X, Plus, ArrowUpCircle, ArrowDownCircle, Download } from 'lucide-react'
+import { useSearchParams, Link } from 'react-router-dom'
+import { Pencil, Trash2, Check, X, Plus, ArrowUpCircle, ArrowDownCircle, Download, PackageSearch } from 'lucide-react'
+import EmptyState from '../components/EmptyState'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function Products({ products, productsLoading, addProduct, updateProduct, deleteProduct, adjustStock, membership }) {
@@ -35,7 +36,7 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
       setIcon('📦')
     }
   }
-  // If the URL has ?edit=<id> (from clicking a 3D warehouse box), auto-open that product's edit mode
+
   useEffect(() => {
     const editId = searchParams.get('edit')
     if (editId && products.length > 0) {
@@ -45,6 +46,13 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
       }
     }
   }, [searchParams, products])
+
+  function handleDeleteClick(product) {
+    const confirmed = confirm(`Delete "${product.name}"? This cannot be undone.`)
+    if (confirmed) {
+      deleteProduct(product.id)
+    }
+  }
 
   function startEdit(product) {
     setEditingId(product.id)
@@ -66,21 +74,13 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
     const matchesCategory = categoryFilter === 'All' || product.category === categoryFilter
     return matchesSearch && matchesCategory
   })
+
   function exportToCSV() {
-    // Header row (column titles)
     const headers = ['Name', 'Category', 'Quantity']
-
-    // Turn each product into one CSV row: "name,category,quantity"
     const rows = filteredProducts.map((p) => [p.name, p.category, p.quantity].join(','))
-
-    // Combine header + rows, separated by new lines
     const csvContent = [headers.join(','), ...rows].join('\n')
-
-    // Create a downloadable file in memory
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
-
-    // Create an invisible link, click it automatically, then remove it
     const link = document.createElement('a')
     link.href = url
     link.download = 'stockpilot-products.csv'
@@ -91,12 +91,12 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Products</h1>
-        <p className="text-gray-500">Manage your inventory items</p>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Products</h1>
+        <p className="text-slate-500 dark:text-gray-400">Manage your inventory items</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Add New Product</h2>
+       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Add New Product</h2>
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={icon}
@@ -135,7 +135,7 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
             whileTap={{ scale: 0.97 }}
             onClick={handleAddProduct}
             disabled={adding}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium px-5 py-2 rounded-lg transition flex items-center gap-1"
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-medium px-5 py-2 rounded-xl transition flex items-center gap-1"
           >
             <Plus size={18} />
             {adding ? 'Adding...' : 'Add Product'}
@@ -143,9 +143,9 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6">
-       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold text-gray-700">Product List</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Product List</h2>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={exportToCSV}
@@ -179,7 +179,19 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
             <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
           </div>
         ) : filteredProducts.length === 0 ? (
-          <p className="text-gray-400">No products found.</p>
+          searchTerm || categoryFilter !== 'All' ? (
+            <EmptyState
+              icon={PackageSearch}
+              title="No matching products"
+              description="Try adjusting your search or category filter."
+            />
+          ) : (
+            <EmptyState
+              icon={PackageSearch}
+              title="No products yet"
+              description="Add your first product above to start tracking inventory."
+            />
+          )
         ) : (
           <div className="space-y-2">
             <AnimatePresence>
@@ -191,86 +203,98 @@ function Products({ products, productsLoading, addProduct, updateProduct, delete
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col sm:flex-row sm:justify-between sm:items-center border border-gray-100 rounded-lg px-4 py-3 gap-3"
+                  className="flex flex-col sm:flex-row sm:justify-between sm:items-center border border-slate-100 dark:border-gray-800 rounded-xl px-4 py-3 gap-3 hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors"
                 >
-                {editingId === product.id ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="border border-gray-300 rounded px-2 py-1 mr-2 flex-1"
-                    />
-                    <input
-                      type="number"
-                      value={editQuantity}
-                      onChange={(e) => setEditQuantity(e.target.value)}
-                      className="border border-gray-300 rounded px-2 py-1 w-20 mr-2"
-                    />
-                    <button
-                      onClick={() => saveEdit(product.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white p-2 rounded mr-2"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={cancelEdit}
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded"
-                    >
-                      <X size={16} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 flex-1">
-                      <span className="text-xl">{product.icon || '📦'}</span>
-                      <span className="font-medium text-gray-700">{product.name}</span>
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-purple-100 text-purple-600">
-                        {product.category || 'General'}
-                      </span>
-                      <span
-                        className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                          product.quantity < 5
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-green-100 text-green-600'
-                        }`}
-                      >
-                        Qty: {product.quantity}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
+                  {editingId === product.id ? (
+                    <>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="border border-gray-300 rounded px-2 py-1 mr-2 flex-1"
+                      />
+                      <input
+                        type="number"
+                        value={editQuantity}
+                        onChange={(e) => setEditQuantity(e.target.value)}
+                        className="border border-gray-300 rounded px-2 py-1 w-20 mr-2"
+                      />
                       <button
-                        onClick={() => adjustStock(product.id, 1, 'in')}
-                        className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded"
-                        title="Stock In (+1)"
+                        onClick={() => saveEdit(product.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white p-2 rounded mr-2"
                       >
-                        <ArrowUpCircle size={16} />
+                        <Check size={16} />
                       </button>
                       <button
-                        onClick={() => adjustStock(product.id, -1, 'out')}
-                        className="bg-orange-100 hover:bg-orange-200 text-orange-700 p-2 rounded"
-                        title="Stock Out (-1)"
-                        disabled={product.quantity <= 0}
+                        onClick={cancelEdit}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded"
                       >
-                        <ArrowDownCircle size={16} />
+                        <X size={16} />
                       </button>
-                      <button
-                        onClick={() => startEdit(product)}
-                        className="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      {membership?.role === 'Manager' && (
-                        <button
-                          onClick={() => deleteProduct(product.id)}
-                          className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded"
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between w-full sm:w-auto sm:flex-1 gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800 flex items-center justify-center text-lg shrink-0">
+                            {product.icon || '📦'}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              to={`/app/products/${product.id}`}
+                              className="font-medium text-slate-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 block truncate"
+                            >
+                              {product.name}
+                            </Link>
+                            <span className="text-xs text-slate-400 dark:text-gray-500">{product.category || 'General'}</span>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-sm font-semibold px-3 py-1 rounded-full shrink-0 ${
+                            product.quantity < 5
+                              ? 'bg-rose-100 text-rose-600'
+                              : 'bg-emerald-100 text-emerald-600'
+                          }`}
                         >
-                          <Trash2 size={16} />
+                          {product.quantity}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
+                        <button
+                          onClick={() => adjustStock(product.id, 1, 'in')}
+                          className="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 p-2 rounded-lg flex items-center justify-center gap-1 text-xs font-medium"
+                          title="Stock In (+1)"
+                        >
+                          <ArrowUpCircle size={16} />
+                          <span className="sm:hidden">In</span>
                         </button>
-                      )}
-                    </div>
-                  </>
-                )}
+                        <button
+                          onClick={() => adjustStock(product.id, -1, 'out')}
+                          className="flex-1 sm:flex-none bg-amber-50 hover:bg-amber-100 text-amber-700 p-2 rounded-lg flex items-center justify-center gap-1 text-xs font-medium"
+                          title="Stock Out (-1)"
+                          disabled={product.quantity <= 0}
+                        >
+                          <ArrowDownCircle size={16} />
+                          <span className="sm:hidden">Out</span>
+                        </button>
+                        <button
+                          onClick={() => startEdit(product)}
+                          className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 p-2 rounded-lg flex items-center justify-center"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        {membership?.role === 'Manager' && (
+                          <button
+                            onClick={() => handleDeleteClick(product)}
+                            className="flex-1 sm:flex-none bg-rose-50 hover:bg-rose-100 text-rose-700 p-2 rounded-lg flex items-center justify-center"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

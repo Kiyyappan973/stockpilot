@@ -33,8 +33,8 @@ function Dashboard({ products }) {
     <div>
       <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500">Overview of your inventory</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Dashboard</h1>
+          <p className="text-slate-500 dark:text-gray-400">Overview of your inventory</p>
         </div>
         <div style={{ width: '120px', height: '120px' }}>
           <RotatingCube hasLowStock={lowStockCount > 0} />
@@ -46,7 +46,7 @@ function Dashboard({ products }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0 }}
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-5 flex items-center gap-4"
         >
           <div className="bg-blue-100 p-3 rounded-lg">
             <Package className="text-blue-600" size={22} />
@@ -61,7 +61,7 @@ function Dashboard({ products }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+ className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-5 flex items-center gap-4"         
         >
           <div className="bg-green-100 p-3 rounded-lg">
             <TrendingUp className="text-green-600" size={22} />
@@ -76,7 +76,7 @@ function Dashboard({ products }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4"
+className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-5 flex items-center gap-4"
         >
           <div className={`p-3 rounded-lg ${lowStockCount > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
             <AlertTriangle className={lowStockCount > 0 ? 'text-red-600' : 'text-gray-400'} size={22} />
@@ -91,8 +91,8 @@ function Dashboard({ products }) {
       </div>
 
       {/* Category Breakdown Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Stock by Category</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 mt-6">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Stock by Category</h2>
 
         {categoryData.length === 0 ? (
           <p className="text-gray-400">Add some products to see the breakdown.</p>
@@ -120,9 +120,9 @@ function Dashboard({ products }) {
       </div>
 
       {/* 3D Warehouse View */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-2">3D Warehouse View</h2>
-        <p className="text-gray-400 text-sm mb-4">Drag to rotate, scroll to zoom, hover a box to see details</p>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 mt-6">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">3D Warehouse View</h2>
+        <p className="text-slate-400 dark:text-gray-500 text-sm mb-4">Drag to rotate, scroll to zoom, hover a box to see details</p>
 
         {products.length === 0 ? (
           <p className="text-gray-400">Add some products to see your warehouse.</p>
