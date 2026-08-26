@@ -1,6 +1,23 @@
-import { Trash2, Moon, Sun } from 'lucide-react'
+import { Trash2, Moon, Sun, Bell } from 'lucide-react'
 
 function Settings({ clearAllData, darkMode, setDarkMode }) {
+  const notificationStatus =
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
+
+  function requestNotificationPermission() {
+    if ('Notification' in window) {
+      Notification.requestPermission()
+    }
+  }
+
+  function sendTestNotification() {
+    if (Notification.permission === 'granted') {
+      new Notification('📦 StockPilot', {
+        body: 'Notifications are working! You\'ll be alerted when stock runs low.',
+        icon: '/favicon.svg'
+      })
+    }
+  }
   function handleClearAllData() {
     const confirmed = confirm(
       'Are you sure you want to delete ALL products? This cannot be undone.'
@@ -15,6 +32,39 @@ function Settings({ clearAllData, darkMode, setDarkMode }) {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
         <p className="text-gray-500">Manage your app preferences</p>
+      </div>
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Notifications</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bell size={20} className="text-gray-600" />
+            <div>
+              <p className="text-gray-700">Low Stock Alerts</p>
+              <p className="text-xs text-gray-400">
+                {notificationStatus === 'granted' && 'Enabled — you\'ll get notified'}
+                {notificationStatus === 'denied' && 'Blocked — enable in browser settings'}
+                {notificationStatus === 'default' && 'Not enabled yet'}
+                {notificationStatus === 'unsupported' && 'Not supported in this browser'}
+              </p>
+            </div>
+          </div>
+          {notificationStatus === 'default' && (
+            <button
+              onClick={requestNotificationPermission}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg"
+            >
+              Enable
+            </button>
+          )}
+          {notificationStatus === 'granted' && (
+            <button
+              onClick={sendTestNotification}
+              className="border border-gray-300 text-gray-600 text-sm px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              Send Test
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">

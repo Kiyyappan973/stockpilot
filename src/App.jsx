@@ -23,6 +23,7 @@ function ProtectedRoute({ user, children }) {
   }
   return children
 }
+
 // Wraps page switching with a fade + slide transition
 function AnimatedRoutes(props) {
   const location = useLocation()
@@ -64,7 +65,7 @@ function AnimatedRoutes(props) {
             </motion.div>
           }
         />
-                <Route
+        <Route
           path="products/:id"
           element={
             <motion.div
@@ -90,7 +91,7 @@ function AnimatedRoutes(props) {
             </motion.div>
           }
         />
-                <Route
+        <Route
           path="team"
           element={
             props.membership?.role === 'Manager' ? (
@@ -100,7 +101,7 @@ function AnimatedRoutes(props) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                               <Team membership={props.membership} onlineUsers={props.onlineUsers} />
+                <Team membership={props.membership} onlineUsers={props.onlineUsers} />
               </motion.div>
             ) : (
               <div className="text-gray-500">You don't have permission to view this page.</div>
@@ -154,12 +155,11 @@ function App() {
     localStorage.setItem('stockpilot-darkmode', JSON.stringify(darkMode))
   }, [darkMode])
 
-  const [membership, setMembership] = useState(null) // { warehouse_id, role, warehouse_name }
+  const [membership, setMembership] = useState(null)
   const [membershipLoading, setMembershipLoading] = useState(true)
   const [products, setProducts] = useState([])
   const [productsLoading, setProductsLoading] = useState(true)
 
-  // Load this user's warehouse membership (which warehouse, what role)
   useEffect(() => {
     async function fetchMembership() {
       if (!user) {
@@ -197,15 +197,14 @@ function App() {
     }
     fetchMembership()
   }, [user])
+
   const [toast, setToast] = useState({ message: '', type: 'success' })
 
-  // Shows a toast message for 3 seconds, then auto-clears it
   function showToast(message, type = 'success') {
     setToast({ message, type })
     setTimeout(() => setToast({ message: '', type: 'success' }), 3000)
   }
 
-  // Keep "showError" name working everywhere, just routes to showToast
   function showError(message) {
     showToast(message, 'error')
   }
@@ -219,9 +218,7 @@ function App() {
     localStorage.setItem('stockpilot-history', JSON.stringify(history))
   }, [history])
 
-  // Load THIS user's products from Supabase whenever they log in
-  
-useEffect(() => {
+  useEffect(() => {
     async function fetchProducts() {
       if (!membership) {
         setProducts([])
@@ -279,6 +276,7 @@ useEffect(() => {
       supabase.removeChannel(channel)
     }
   }, [membership])
+
   async function addProduct(newProduct) {
     const { data, error } = await supabase
       .from('products')
@@ -293,6 +291,7 @@ useEffect(() => {
     showToast('Product added successfully!')
     return true
   }
+
   async function updateProduct(id, updates) {
     const { error } = await supabase
       .from('products')
@@ -321,6 +320,24 @@ useEffect(() => {
     showToast('Product deleted.')
   }
 
+  // Ask for notification permission once, when the app first loads (if logged in)
+  useEffect(() => {
+    if (!user) return
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [user])
+
+  // Shows a browser notification if permission was granted
+  function showLowStockNotification(productName, quantity) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('⚠️ Low Stock Alert', {
+        body: `${productName} is running low (${quantity} left)`,
+        icon: '/favicon.svg'
+      })
+    }
+  }
+
   // Plays a short beep sound using the browser's built-in audio engine
   function playAlertSound() {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -330,11 +347,11 @@ useEffect(() => {
     oscillator.connect(gainNode)
     gainNode.connect(audioContext.destination)
 
-    oscillator.frequency.value = 800 // pitch of the beep
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime) // volume
+    oscillator.frequency.value = 800
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
 
     oscillator.start()
-    oscillator.stop(audioContext.currentTime + 0.15) // beep lasts 0.15 seconds
+    oscillator.stop(audioContext.currentTime + 0.15)
   }
 
   async function adjustStock(productId, amount, type) {
@@ -344,11 +361,12 @@ useEffect(() => {
     const newQuantity = product.quantity + amount
     await updateProduct(productId, { quantity: newQuantity })
 
+    // If this movement caused stock to CROSS below 5, play an alert sound + notify
     if (product.quantity >= 5 && newQuantity < 5) {
       playAlertSound()
+      showLowStockNotification(product.name, newQuantity)
     }
 
-    // Save this movement to Supabase (shared history, works with charts)
     await supabase.from('stock_history').insert([{
       warehouse_id: membership.warehouse_id,
       product_id: productId,
@@ -381,9 +399,9 @@ useEffect(() => {
     }
     setProducts([])
   }
-    const [onlineUsers, setOnlineUsers] = useState([])
 
-  // Track presence — who's currently online in this warehouse
+  const [onlineUsers, setOnlineUsers] = useState([])
+
   useEffect(() => {
     if (!membership || !user) return
 
@@ -394,7 +412,6 @@ useEffect(() => {
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState()
-        // Flatten the presence state into a simple list of unique users
         const users = Object.values(state).map((entries) => entries[0])
         setOnlineUsers(users)
       })

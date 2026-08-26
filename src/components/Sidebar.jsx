@@ -45,7 +45,7 @@ function Sidebar({ user, membership, onlineUsers = [] }) {
       </div>
 
       {/* Desktop sidebar — unchanged */}
-      <div className="hidden md:flex w-64 bg-white dark:bg-gray-900 shadow-sm p-4 flex-col gap-2 h-screen sticky top-0">
+      <div className="hidden md:flex w-64 bg-white dark:bg-gray-900 shadow-sm p-4 flex-col gap-2 h-screen sticky top-0 self-start">
         <div className="px-2 mb-6">
           <div className="flex items-center gap-2 mb-1">
             <Package className="text-indigo-600" size={28} />
