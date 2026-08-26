@@ -442,9 +442,9 @@ function App() {
           path="/app/*"
           element={
             <ProtectedRoute user={user}>
-              <div className={`flex flex-col md:flex-row w-full overflow-x-hidden ${darkMode ? 'dark' : ''}`}>
+              <div className={`flex flex-col md:flex-row w-full overflow-x-hidden md:h-screen ${darkMode ? 'dark' : ''}`}>
                 <Sidebar user={user} membership={membership} onlineUsers={onlineUsers} />
-                <div className="flex-1 min-h-screen w-full min-w-0 p-4 pb-24 md:p-8 md:pb-8 transition-colors overflow-x-hidden bg-slate-50 dark:bg-gray-950">
+                <div className="flex-1 min-h-screen md:h-screen md:overflow-y-auto w-full min-w-0 p-4 pb-24 md:p-8 md:pb-8 transition-colors overflow-x-hidden bg-slate-50 dark:bg-gray-950">
                   <Toast message={toast.message} type={toast.type} />
                   {lowStockProducts.length > 0 && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
