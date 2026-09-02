@@ -40,7 +40,7 @@ function AnimatedRoutes(props) {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Dashboard products={props.products} />
+               <Dashboard products={props.products} membership={props.membership} />
             </motion.div>
           }
         />
@@ -361,8 +361,9 @@ function App() {
     const newQuantity = product.quantity + amount
     await updateProduct(productId, { quantity: newQuantity })
 
-    // If this movement caused stock to CROSS below 5, play an alert sound + notify
-    if (product.quantity >= 5 && newQuantity < 5) {
+    // If this movement caused stock to CROSS below its threshold, play an alert sound + notify
+    const productThreshold = product.low_stock_threshold ?? 5
+    if (product.quantity >= productThreshold && newQuantity < productThreshold) {
       playAlertSound()
       showLowStockNotification(product.name, newQuantity)
     }
@@ -429,7 +430,7 @@ function App() {
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>
   }
-  const lowStockProducts = products.filter((p) => p.quantity < 5)
+  const lowStockProducts = products.filter((p) => p.quantity < (p.low_stock_threshold ?? 5))
 
   return (
     <BrowserRouter>

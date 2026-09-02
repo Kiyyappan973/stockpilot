@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../firebase'
 import { Link, useNavigate } from 'react-router-dom'
 import { Package, Boxes, TrendingUp, ShieldCheck } from 'lucide-react'
@@ -11,6 +11,23 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+    const [resetSent, setResetSent] = useState(false)
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Please enter your email above first, then click "Forgot password?"')
+      return
+    }
+    setError('')
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setResetSent(true)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+ 
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -106,6 +123,16 @@ function Login() {
             </motion.p>
           )}
 
+          {resetSent && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-green-50 text-green-700 text-sm p-3 rounded-lg mb-4"
+            >
+              Password reset email sent! Check your inbox for a link to reset your password.
+            </motion.p>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="email"
@@ -133,6 +160,13 @@ function Login() {
               {loading ? 'Logging in...' : 'Log In'}
             </motion.button>
           </form>
+
+          <button
+            onClick={handleForgotPassword}
+            className="text-center w-full text-sm text-blue-600 hover:underline mt-3"
+          >
+            Forgot password?
+          </button>
 
           <p className="text-center text-gray-500 text-sm mt-4">
             Don't have an account?{' '}

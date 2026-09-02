@@ -19,16 +19,13 @@ function History({ membership }) {
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (!error) {
-        setHistory(data)
-      }
+      if (!error) setHistory(data)
       setLoading(false)
     }
     fetchHistory()
 
     if (!membership) return
 
-    // Live updates: new activity appears instantly for the whole team
     const channel = supabase
       .channel('stock-history-realtime')
       .on(
@@ -53,14 +50,14 @@ function History({ membership }) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">Activity Feed</h1>
-        <p className="text-slate-500">Track every stock movement across your team</p>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Activity Feed</h1>
+        <p className="text-slate-500 dark:text-gray-400">Track every stock movement across your team</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
           </div>
         ) : history.length === 0 ? (
           <EmptyState
@@ -76,26 +73,34 @@ function History({ membership }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.5) }}
-                className="flex items-center justify-between border border-gray-100 rounded-lg px-4 py-3"
+                className="flex items-center justify-between border border-slate-100 dark:border-gray-800 rounded-xl px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  {entry.type === 'in' ? (
-                    <ArrowUpCircle className="text-green-600" size={20} />
-                  ) : (
-                    <ArrowDownCircle className="text-red-600" size={20} />
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-700">{entry.product_name}</p>
-                    <p className="text-xs text-gray-400">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      entry.type === 'in'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/40'
+                        : 'bg-rose-100 dark:bg-rose-900/40'
+                    }`}
+                  >
+                    {entry.type === 'in' ? (
+                      <ArrowUpCircle className="text-emerald-600 dark:text-emerald-400" size={18} />
+                    ) : (
+                      <ArrowDownCircle className="text-rose-600 dark:text-rose-400" size={18} />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-700 dark:text-white truncate">{entry.product_name}</p>
+                    <p className="text-xs text-slate-400 dark:text-gray-500 truncate">
                       {entry.user_email || 'Unknown user'} · {new Date(entry.created_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
                 <span
-                  className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                  className={`text-sm font-bold px-3 py-1 rounded-full shrink-0 ${
                     entry.type === 'in'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-red-100 text-red-600'
+                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
+                      : 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
                   }`}
                 >
                   {entry.type === 'in' ? '+' : '-'}{entry.amount}
